@@ -162,11 +162,11 @@ class KM
     def send_query(query)
       host,port = @host.split(':')
       path = "http://" + host + query
-      begin
-        EventMachine.run { http = EventMachine::HttpRequest.new(path).get }
-      rescue Exception => e
-        raise "#{e} for host #{@host}"
-      end
+      EventMachine.run { 
+        http = EventMachine::HttpRequest.new(path).get
+        http.errback { raise "#{host} had status #{http.response_header.status}" }
+        http.callback { EventMachine.stop }
+      }
     end
 
     def log_dir_writable?
