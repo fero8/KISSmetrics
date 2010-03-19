@@ -1,6 +1,7 @@
 require 'cgi'
-require 'socket'
 require 'fileutils'
+require 'rubygems'
+require 'em-http'
 
 # changelog:
 # 1.0.1
@@ -158,15 +159,11 @@ class KM
       end
     end
 
-    def send_query(line)
+    def send_query(query)
       host,port = @host.split(':')
+      path = "http://" + host + query
       begin
-        sock = TCPSocket.open(host,port)
-        request = 'GET ' +  line + " HTTP/1.1\r\n"
-        request += "Host: " + Socket.gethostname + "\r\n"
-        request += "Connection: Close\r\n\r\n";
-        sock.print(request)
-        sock.close
+        EventMachine.run { http = EventMachine::HttpRequest.new(path).get }
       rescue Exception => e
         raise "#{e} for host #{@host}"
       end
